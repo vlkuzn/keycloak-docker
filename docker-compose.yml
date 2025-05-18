@@ -1,0 +1,42 @@
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.2
+    container_name: keycloak-app
+    env_file:
+      - .env
+    depends_on:
+      - db
+    command:
+      - start
+    networks:
+      - keycloak-network
+
+  db:
+    image: postgres:16
+    container_name: keycloak-db
+    env_file:
+      - .env
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - keycloak-network
+
+  nginx:
+    image: nginx:1.28.0-alpine
+    container_name: keycloak-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./certs:/etc/nginx/certs:ro
+    depends_on:
+      - keycloak
+    networks:
+      - keycloak-network
+
+volumes:
+  pgdata:
+
+networks:
+  keycloak-network:
